@@ -7,6 +7,7 @@ import numpy as np
 import cv2
 import json
 import ctypes
+from time import sleep
 
 class GameObject():
     def __init__(self):
@@ -14,6 +15,7 @@ class GameObject():
         self.loop_number = 0
         self.quit_the_game = False
         self.screenshoot_tool = mss.mss()
+        self.actionlist = ['left']
         self.config()
 
     def config(self):
@@ -40,7 +42,7 @@ class GameObject():
             },
             'box_level':{
                 'left': 809, 
-                'top': 78+94+self.height_of_middle_box*self.how_many_levels_from_top, 
+                'top': self.top_start+self.highest_level_offset+self.height_of_middle_box*self.how_many_levels_from_top, 
                 'width': 800, 
                 'height': 137, #124 is size of one middle box
             },
@@ -103,6 +105,28 @@ class GameObject():
                 'color':(255,0,0),
                 'matches':[],
             },
+            'scoreboard':{
+                'path_to_sourcefile':'sourcefiles/scoreboard.jpg',
+                'image':False, 
+                'width': False, 
+                'height': False,
+                'best_match_probability':False,
+                'best_match_position':False,
+                'color':(255,0,0),
+                'matches':[],
+            },
+        }
+
+        self.target_position = {
+            'left':{
+                'x':809+200,
+                'y':550,
+            },
+            'right':{
+                'x':809+600,
+                'y':550,
+            },
+
         }
 
     def load_image_to_reckognize(self, image_name):
@@ -193,10 +217,30 @@ class GameObject():
     def save_screenshot(self):
         cv2.imwrite(f'output\output{self.loop_number}.jpg', self.screenshot)    
 
+    def update_top_value_of_box_level(self):
+        self.top_start = self.desired_images['corner']['best_match_position'][1]
+        self.area_to_take_screenshot['box_level']['top'] = self.top_start+self.highest_level_offset+self.height_of_middle_box*self.how_many_levels_from_top
+
     def check_if_quit_the_game(self):
         if keyboard.is_pressed('q'):
             print('\nGame is stopped')
             self.quit_the_game = True
+
+        if self.desired_images['scoreboard']['best_match_probability']>0.95:
+            print('\nGame is lost')
+            self.quit_the_game = True
+
+    def choose_side(self):
+        probability_that_box_is_on_the_left = self.desired_images['left_box_icons']['best_match_probability']
+        probability_that_box_is_on_the_right = self.desired_images['right_box_icons']['best_match_probability']
+        if probability_that_box_is_on_the_left < 0.95 and probability_that_box_is_on_the_right < 0.95:
+            self.choosen_side = self.actionlist[0] #If we cant determine which side we should choose then repead previous one
+        else:
+            if probability_that_box_is_on_the_left>probability_that_box_is_on_the_right:
+                self.choosen_side = 'right'
+            else:
+                self.choosen_side = 'left'
+        print(f'Choosen side is: {self.choosen_side}')
 
     def game_loop(self):
         for image in self.desired_images:
@@ -211,15 +255,30 @@ class GameObject():
             self.print_matches_info(target)
         self.save_screenshot()
         
+        self.update_top_value_of_box_level()
+
+    
         while not self.quit_the_game:
             self.loop_number+=1
             self.take_screenshot(target_area='box_level')
-            # self.find_matches_for_desired_image('rudy')
-
-
+            for target in ('right_box_icons', 'left_box_icons', 'scoreboard'):
+                self.find_matches_for_desired_image(target)
+                self.highlight_on_screenshot(target, all_matches=True)
+                self.print_matches_info(target)
+            self.choose_side()
+            if self.choosen_side=='right':
+                self.actionlist.insert(0, 'right')
+            else:
+                self.actionlist.insert(0, 'left')
             self.save_screenshot()
+
+            print(f'Currently planned actions are: {self.actionlist}')
+
+            target_side = self.actionlist.pop()
+            pyautogui.click(x = self.target_position[target_side]['x'], y= self.target_position[target_side]['y'])
+            
+            sleep(.07)
             self.check_if_quit_the_game()
-            self.quit_the_game=True
 
 GO = GameObject()
 GO.game_loop()
