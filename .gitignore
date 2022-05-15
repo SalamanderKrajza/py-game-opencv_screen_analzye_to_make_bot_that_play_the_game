@@ -1,3 +1,6 @@
 /venv
 /output/*
-
+__pycache__
+imgui.ini
+venv/
+.vscode
