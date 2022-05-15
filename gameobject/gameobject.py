@@ -1,3 +1,6 @@
+import pyautogui 
+from time import sleep
+import keyboard
 class GameObject():
     from gameobject.gameobject_methods import config
 
@@ -28,7 +31,6 @@ class GameObject():
         self.highlight_levels()
         self.save_screenshot()
 
-        sleep_time = 0.05
         while not self.quit_the_game:
             self.loop_number+=1
             print(f'\nloop_number: {self.loop_number}')
@@ -47,18 +49,30 @@ class GameObject():
             self.highlight_levels()
             self.save_screenshot()
 
-            print(f'Currently planned actions are: {self.choosen_side}')
+            print(f'Currently planned actions are: {self.planned_actions_list}')
 
-            target_side = self.choosen_side
-            pyautogui.click(x = self.target_position[target_side]['x'], y= self.target_position[target_side]['y'])
-            
-            if self.loop_number%100==0: 
-                sleep_time-=0.01
-            if self.loop_number>200 and self.loop_number%10==0: 
-                sleep_time-=0.003
-            elif self.loop_number>250 and self.loop_number%10==0: 
-                sleep_time-=0.004
-            sleep(sleep_time)
+            for clicks in range(2, -1, -1):
+                #Make all 3 planned clicks
+                # target_side = self.planned_actions_list.pop() #Pop is removing last element from data
+                target_side = self.planned_actions_list[clicks]
+                print(f"We pressed {target_side}; Waiting actions are: {self.planned_actions_list}")
+                # if target_side=='right':
+                #     pyautogui.press('right')
+                # else:
+                #     pyautogui.press('left')
+                pyautogui.click(x = self.target_position[target_side]['x'], y= self.target_position[target_side]['y'])
+                sleep(0.09)
+                #DEBUGING:
+                self.take_screenshot(target_area='game_area')
+                self.save_screenshot(f"after_{clicks}_clicks")
+                
+            # if self.loop_number%100==0: 
+            #     sleep_time-=0.01
+            # if self.loop_number>200 and self.loop_number%10==0: 
+            #     sleep_time-=0.003
+            # elif self.loop_number>250 and self.loop_number%10==0: 
+            #     sleep_time-=0.004
+            sleep(0.4)
             self.check_if_quit_the_game()
 
                 # self.quit_the_game=True

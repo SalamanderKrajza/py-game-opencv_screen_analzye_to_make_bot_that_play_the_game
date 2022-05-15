@@ -7,7 +7,6 @@ import numpy as np
 import cv2
 import json
 import ctypes
-from time import sleep
 
 def config(self):
     user32 = ctypes.windll.user32
@@ -126,16 +125,7 @@ def __init__(self):
     self.screenshoot_tool = mss.mss()
     self.actionlist = ['left']
     self.previous_found_object = False
-    # self.list_of_elements_on_top_levels = {
-    #     'top1':[False, False, False, ],
-    #     'top2':[False, False, ],
-    #     'top3':[False,  ],
-    # }
-    self.list_of_elements_on_top_levels = {
-        'top1':[False, ],
-        'top2':[False, ],
-        'top3':[False,  ],
-    }
+    self.side_to_avoid = {0:False, 1:False, 2:False, 3:False, 4:False, 5:False,}
     self.threshold = 0.75
     self.config()
 
@@ -182,7 +172,7 @@ def find_matches_for_desired_image(self, image_name):
     self.desired_images[image_name]['best_match_position'] = position
 
     #Find and remember each match over given treshold
-    threshold = 0.8
+    threshold = 0.6
     self.desired_images[image_name]['matches'] = []
     matches_with_desired_treshold = np.where( result >= threshold)
     for position in zip(*matches_with_desired_treshold[::-1]):
@@ -296,7 +286,7 @@ def check_if_quit_the_game(self):
         self.quit_the_game = True
 
 def update_level_values(self):
-    matched_elements = {
+    self.matched_elements = {
         'top1':False,
         'top2':False,
         'top3':False,
@@ -305,16 +295,13 @@ def update_level_values(self):
         target=f"{side}_box_icons"
         for match in self.desired_images[target]['matches']:
             if 94<match[1]<227:
-                matched_elements['top1'] = side
+                self.matched_elements['top1'] = side
             if 227<match[1]<360:
-                matched_elements['top2'] = side
+                self.matched_elements['top2'] = side
             if 360<match[1]<493:
-                matched_elements['top3'] = side
+                self.matched_elements['top3'] = side
 
-    for level in matched_elements:
-        self.list_of_elements_on_top_levels[level].insert(0, matched_elements[level])
-    print(f'\nUpdated list of elements on top level sides: {json.dumps(self.list_of_elements_on_top_levels, indent=4)}')
-
+    # print(f'\nUpdated of matched elements on top level sides: {json.dumps(self.matched_elements, indent=4)}')
 
 
 def choose_side(self):
@@ -338,55 +325,26 @@ def choose_side(self):
             print(f'Choosen side is by replaced with previous decision: [{self.choosen_side}] because of wrong place of matching')
 
 def choose_side_by_lists(self):
-    objects_before_moving={
-        'top0':False,
-        'top1':False,
-        'top2':False,
-        'top3':False,
-        'top4':False,
-        'rudy_level':False,
+    self.side_to_avoid = {
+        0:False,
+        1:self.matched_elements['top1'] ,#Checked on screen
+        2:self.matched_elements['top2'], #Checked on screen
+        3:self.matched_elements['top3'], #Checked on screen
+        4:self.side_to_avoid [1], #From previous iteration
+        5:self.side_to_avoid [2], #From previous iteration - rudy level
     }
 
-    objects_after_moving = {
-        'top0':False,
-        'top1':False,
-        'top2':False,
-        'top3':False,
-        'top4':objects_before_moving['top1'],
-        'rudy_level':objects_before_moving['top2'],
-    }
+    for level in range(6):
+        if self.side_to_avoid[level]==False:
+            if level>0: self.side_to_avoid[level]=self.side_to_avoid[level-1] #Replace FALSE values by value from above
+
+    print(f'\nAreas to avoid: {json.dumps(self.side_to_avoid, indent=4)}')
 
 
-    self.side_package = {
-        5:{'name':'top0', 'value':False,},
-        4:{'name':'top1', 'value':False,},
-        3:{'name':'top2', 'value':False,},
-        2:{'name':'top3', 'value':False,},
-        1:{'name':'top4', 'value':self.side_package ['top1'],}, #After making 3 moves it should have value values captured on previous screenshot
-        0:{'name':'rudy_level', 'value':self.side_package ['top2'],},
-    }
-
-    
-    for action_number in range(3):
-        if self.side_package[action_number]:
-        planned_actions.append()
-    planned_actions = [False, False, False]
-    
-
-
-        self.current_found_object = self.previous_found_object
-        for level in self.list_of_elements_on_top_levels:
-            value_from_list = self.list_of_elements_on_top_levels[level].pop()
-            if value_from_list: 
-                self.current_found_object = value_from_list
-                print(f'We picked valie {value_from_list} from {level} list')
-        
-        self.previous_found_object = self.current_found_object
-        
-        if self.current_found_object == 'right':
-            self.choosen_side = 'left'
-        elif self.current_found_object == 'left':
-            self.choosen_side = 'right'
+    self.planned_actions_list = []
+    for level in range(3,6):
+        if self.side_to_avoid[level]=='right': 
+            self.planned_actions_list.append('left')
         else:
-            self.choose_side=self.previous_found_object
-        
+            self.planned_actions_list.append('right')
+
