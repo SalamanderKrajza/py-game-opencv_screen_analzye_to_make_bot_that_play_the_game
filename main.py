@@ -341,15 +341,20 @@ class GameObject():
             #     sleep_time= 0.027
             # elif self.loop_number<260:
             #     sleep_time= 0.021
-            # elif self.loop_number<260:
-            #     sleep_time= 0.017             
+            # elif self.loop_number<280:
+            #     sleep_time= 0.020
+            # elif self.loop_number<290:
+            #     sleep_time= 0.019
             # else:
             #     sleep_time= 0.02
 
-            sleep_time= 0.021
+            #308
+            # sleep_time = 0.023
 
+            #308
+            sleep_time = 0.0215
+            # sleep_time = 0.016
 
-            # sleep_time = 0.03
 
             sleep(sleep_time)
             self.check_if_quit_the_game()
