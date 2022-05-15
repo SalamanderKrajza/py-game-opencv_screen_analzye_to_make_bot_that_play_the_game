@@ -292,7 +292,7 @@ class GameObject():
         
         self.update_top_value_of_box_level()
 
-        sleep_time = 0.05
+        # sleep_time = 0.05
         while not self.quit_the_game:
             self.loop_number+=1
             print(f'\nloop_number: {self.loop_number}')
@@ -319,12 +319,38 @@ class GameObject():
             target_side = self.actionlist.pop()
             pyautogui.click(x = self.target_position[target_side]['x'], y= self.target_position[target_side]['y'])
             
-            if self.loop_number%100==0: 
-                sleep_time-=0.01
-            if self.loop_number>200 and self.loop_number%10==0: 
-                sleep_time-=0.003
-            elif self.loop_number>250 and self.loop_number%10==0: 
-                sleep_time-=0.004
+            # if self.loop_number%100==0: 
+            #     sleep_time-=0.01
+            # if self.loop_number>00 and self.loop_number%10==0: 
+            #     sleep_time-=0.003
+            # elif self.loop_number>250 and self.loop_number%10==0: 
+            #     sleep_time-=0.006
+            # if sleep_time<=0: sleep_time=0.001
+
+
+            # 301
+            # if self.loop_number < 200:
+            #     sleep_time= 0.028
+            # elif self.loop_number<300:
+            #     sleep_time= 0.021
+            # else:
+            #     sleep_time= 0.02
+
+            #310
+            # if self.loop_number < 200:
+            #     sleep_time= 0.027
+            # elif self.loop_number<260:
+            #     sleep_time= 0.021
+            # elif self.loop_number<260:
+            #     sleep_time= 0.017             
+            # else:
+            #     sleep_time= 0.02
+
+            sleep_time= 0.021
+
+
+            # sleep_time = 0.03
+
             sleep(sleep_time)
             self.check_if_quit_the_game()
 
